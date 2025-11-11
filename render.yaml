@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: smart-lms-backend
+    runtime: docker
+    plan: free
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: FILE_UPLOAD_DIR
+        value: /tmp/uploads
+      - key: RAG_SERVER_URL
+        sync: false
