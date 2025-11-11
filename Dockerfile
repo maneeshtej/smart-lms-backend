@@ -1,36 +1,32 @@
-# Use an official lightweight OpenJDK 17 image
-FROM openjdk:17-jdk-slim AS build
+# ---------- Build Stage ----------
+FROM eclipse-temurin:17-jdk AS build
 
-# Set working directory inside the container
 WORKDIR /app
 
-# Copy project files (Maven wrapper + pom.xml first for caching)
+# Copy Maven wrapper & config first (for caching)
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-# Download dependencies (cached layer)
+# Preload dependencies
 RUN ./mvnw dependency:go-offline -B
 
-# Copy the rest of the source code
+# Copy the actual source code
 COPY src src
 
-# Build the JAR file (skip tests for faster build)
+# Build the jar
 RUN ./mvnw clean package -DskipTests
 
-# ===============================
-# Final runtime image
-# ===============================
-FROM openjdk:17-jdk-slim
+# ---------- Runtime Stage ----------
+FROM eclipse-temurin:17-jre
 
-# Working directory
 WORKDIR /app
 
 # Copy built jar from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose the port Render will assign
+# Expose the port Render assigns
 EXPOSE 8080
 
-# Run the application
+# Run the app on Render's assigned port
 CMD ["sh", "-c", "java -jar app.jar --server.port=$PORT"]
