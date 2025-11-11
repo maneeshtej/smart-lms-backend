@@ -28,23 +28,25 @@ public class AuthController {
         return response;
     }
 
-    @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody Map<String, String> body) {
-        String username = body.get("username");
-        String password = body.get("password");
+   @PostMapping("/login")
+public Map<String, Object> login(@RequestBody Map<String, String> body) {
+    String username = body.get("username");
+    String password = body.get("password");
 
-        Optional<User> userOpt = authService.login(username, password);
-        Map<String, Object> response = new HashMap<>();
+    Optional<User> userOpt = authService.login(username, password);
+    Map<String, Object> response = new HashMap<>();
 
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            response.put("status", "ok");
-            response.put("role", user.getRole());
-        } else {
-            response.put("status", "error");
-            response.put("message", "Invalid username or password");
-        }
-
-        return response;
+    if (userOpt.isPresent()) {
+        User user = userOpt.get();
+        response.put("status", "ok");
+        response.put("role", user.getRole());       // keep existing role
+        response.put("username", user.getUsername()); // ✅ added username
+    } else {
+        response.put("status", "error");
+        response.put("message", "Invalid username or password");
     }
+
+    return response;
+}
+
 }
