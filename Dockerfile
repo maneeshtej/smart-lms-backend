@@ -3,18 +3,21 @@ FROM eclipse-temurin:17-jdk AS build
 
 WORKDIR /app
 
-# Copy Maven wrapper & config first (for caching)
+# Copy Maven wrapper & configuration first (for caching)
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
+# Make sure the Maven wrapper is executable (Render sometimes drops exec bit)
+RUN chmod +x mvnw
+
 # Preload dependencies
 RUN ./mvnw dependency:go-offline -B
 
-# Copy the actual source code
+# Copy source code
 COPY src src
 
-# Build the jar
+# Build the JAR
 RUN ./mvnw clean package -DskipTests
 
 # ---------- Runtime Stage ----------
@@ -22,11 +25,12 @@ FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-# Copy built jar from the build stage
+# Copy built JAR from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose the port Render assigns
-EXPOSE 8080
+# Render dynamically assigns a port via $PORT
+# Use this to ensure Tomcat binds to the correct port
+EXPOSE 10000
 
-# Run the app on Render's assigned port
-CMD ["sh", "-c", "java -jar app.jar --server.port=$PORT"]
+# Run Spring Boot with Render’s assigned port
+CMD ["sh", "-c", "java -jar app.jar --server.port=${PORT:-8080}"]
